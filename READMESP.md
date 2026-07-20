@@ -119,5 +119,3 @@ Este proyecto se distribuye bajo la licencia MIT.
 ⸻
 
 JGP Organizer nace con el objetivo de convertirse en una solución potente, flexible y extensible para la gestión automática de archivos, aplicando buenas prácticas de desarrollo en Python y una arquitectura preparada para crecer con nuevas funcionalidades.
-
-esto en ingles tal cual
