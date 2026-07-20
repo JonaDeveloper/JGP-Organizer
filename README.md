@@ -1,40 +1,41 @@
-📁 JGP Organizer
+# 📁 JGP Organizer
 
-Un organizador de archivos inteligente desarrollado en Python.
+An intelligent file organizer built with Python.
 
-JGP Organizer automatiza la organización de archivos y carpetas aplicando reglas configurables para mantener cualquier directorio limpio y estructurado. Está diseñado para ser rápido, extensible y fácil de usar, tanto desde la línea de comandos como, en futuras versiones, mediante una interfaz gráfica.
+JGP Organizer automates file and folder organization by applying configurable rules to keep any directory clean and well-structured. It is designed to be fast, extensible, and easy to use, both from the command line and, in future releases, through a graphical user interface.
 
-⸻
+---
 
-✨ Características
+## ✨ Features
 
-* 📂 Organización automática de archivos.
-* 🗃️ Clasificación por extensión, categoría o reglas personalizadas.
-* ⚙️ Sistema de configuración flexible.
-* 🚀 Procesamiento rápido y eficiente.
-* 🔒 Protección contra sobrescritura de archivos.
-* 📄 Registro de operaciones mediante logs.
-* 🔍 Modo de simulación (Dry Run) para previsualizar cambios.
-* ♻️ Organización automática programable.
-* 🧩 Arquitectura modular para facilitar futuras ampliaciones.
-* 🌍 Compatible con Windows, macOS y Linux.
+- 📂 Automatic file organization.
+- 🗃️ File classification by extension, category, or custom rules.
+- ⚙️ Flexible configuration system.
+- 🚀 Fast and efficient processing.
+- 🔒 File overwrite protection.
+- 📄 Operation logging.
+- 🔍 Dry Run mode to preview changes before applying them.
+- ♻️ Scheduled automatic organization.
+- 🧩 Modular architecture for easy future expansion.
+- 🌍 Cross-platform support (Windows, macOS, and Linux).
 
-⸻
+---
 
-📦 Tecnologías
+## 📦 Technologies
 
-* Python 3.12+
-* pathlib
-* shutil
-* os
-* logging
-* argparse
-* pytest
+- Python 3.12+
+- pathlib
+- shutil
+- os
+- logging
+- argparse
+- pytest
 
-⸻
+---
 
-📂 Estructura del proyecto
+## 📂 Project Structure
 
+```text
 JGPOrganizer/
 │
 ├── src/
@@ -46,76 +47,77 @@ JGPOrganizer/
 ├── requirements.txt
 ├── README.md
 └── LICENSE
+```
 
-⸻
+---
 
-🚀 Objetivos
+## 🚀 Goals
 
-El proyecto busca ofrecer una herramienta capaz de:
+The project aims to provide a tool capable of:
 
-* Organizar automáticamente la carpeta Descargas.
-* Clasificar documentos, imágenes, vídeos, música y archivos comprimidos.
-* Crear carpetas automáticamente cuando sea necesario.
-* Detectar archivos duplicados.
-* Renombrar archivos de forma inteligente.
-* Permitir reglas personalizadas definidas por el usuario.
-* Integrarse con tareas programadas del sistema operativo.
+- Automatically organizing the Downloads folder.
+- Classifying documents, images, videos, music, and compressed files.
+- Creating folders automatically when needed.
+- Detecting duplicate files.
+- Renaming files intelligently.
+- Supporting user-defined custom rules.
+- Integrating with operating system scheduled tasks.
 
-⸻
+---
 
-🛣️ Roadmap
+## 🛣️ Roadmap
 
-Versión 1.0
+### Version 1.0
 
-* Organización por extensiones.
-* Configuración mediante JSON.
-* Sistema de logs.
-* Interfaz por línea de comandos.
+- File organization by extension.
+- JSON-based configuration.
+- Logging system.
+- Command-line interface (CLI).
 
-Versión 2.0
+### Version 2.0
 
-* Reglas personalizadas.
-* Modo Dry Run.
-* Organización automática en segundo plano.
-* Gestión de archivos duplicados.
+- Custom rules.
+- Dry Run mode.
+- Background automatic organization.
+- Duplicate file management.
 
-Versión 3.0
+### Version 3.0
 
-* Interfaz gráfica.
-* Estadísticas de organización.
-* Perfiles de configuración.
-* Plugins y extensiones.
+- Graphical user interface (GUI).
+- Organization statistics.
+- Configuration profiles.
+- Plugin and extension support.
 
-⸻
+---
 
-🤝 Contribuciones
+## 🤝 Contributing
 
-Las contribuciones son bienvenidas. Si deseas colaborar:
+Contributions are welcome! If you'd like to help improve the project:
 
-1. Haz un Fork del proyecto.
-2. Crea una rama para tu funcionalidad.
-3. Realiza tus cambios.
-4. Envía un Pull Request.
+1. Fork the repository.
+2. Create a feature branch.
+3. Make your changes.
+4. Submit a Pull Request.
 
-⸻
+---
 
-📄 Licencia
+## 📄 License
 
-Este proyecto se distribuye bajo la licencia MIT.
+This project is licensed under the MIT License.
 
-⸻
+---
 
-⭐ Próximas funcionalidades
+## ⭐ Planned Features
 
-* Detección de archivos duplicados.
-* Organización mediante IA.
-* Reglas basadas en contenido.
-* Sincronización con almacenamiento en la nube.
-* Historial de cambios.
-* Deshacer operaciones.
-* Interfaz gráfica moderna.
-* Soporte multilenguaje.
+- Duplicate file detection.
+- AI-powered file organization.
+- Content-based organization rules.
+- Cloud storage synchronization.
+- Operation history.
+- Undo functionality.
+- Modern graphical user interface.
+- Multi-language support.
 
-⸻
+---
 
-JGP Organizer nace con el objetivo de convertirse en una solución potente, flexible y extensible para la gestión automática de archivos, aplicando buenas prácticas de desarrollo en Python y una arquitectura preparada para crecer con nuevas funcionalidades.
+JGP Organizer was created with the goal of becoming a powerful, flexible, and extensible solution for automatic file management, following Python best practices and a scalable architecture designed to grow with new features over time.
