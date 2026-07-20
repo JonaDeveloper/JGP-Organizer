@@ -38,19 +38,10 @@ JGP Organizer automatiza la organización de archivos y carpetas aplicando regla
 JGPOrganizer/
 │
 ├── src/
-│   ├── organizer/
-│   ├── rules/
-│   ├── utils/
-│   └── main.py
-│
-├── config/
-│   └── config.json
-│
-├── tests/
-│
-├── logs/
-│
-├── docs/
+│   ├── config.py
+│   ├── main.py
+│   ├── organizer.py
+│   └── rules.py
 │
 ├── requirements.txt
 ├── README.md
