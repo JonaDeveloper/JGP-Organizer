@@ -1,8 +1,10 @@
 from pathlib import Path
+import config, rules, organizer
+
 
 p = Path('.')
 
-for x in p.iterdir():
-  if x.is_file:
-    print(x, x.suffix)
-
+f = 0
+for f in p.iterdir():
+  if f.is_file():
+    print(rules.detection(f))
