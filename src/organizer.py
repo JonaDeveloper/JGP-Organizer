@@ -14,7 +14,7 @@ def organize_file(category, file):
 
 
 def rename_duplicates(file, destination_folder):
-    duplication_folder = destination_folder / "Duplicados"
+    duplication_folder = destination_folder / "Duplicates"
     duplication_folder.mkdir(exist_ok=True)
 
     counter = 0
