@@ -56,4 +56,4 @@ Each module has a single responsibility:
 
 ## Author
 
-Built by JonaDeveloper as a learning project while working toward the PCAP (Certified Associate in Python Programming) certification.
+Built by JonasDev as a learning project.
