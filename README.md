@@ -1,123 +1,59 @@
-# 📁 JGP Organizer
+# JGP-Organizer
 
-An intelligent file organizer built with Python.
+A configurable file organizer built with Python. Scans a directory, classifies files by extension, and automatically moves them into category-based subfolders.
 
-JGP Organizer automates file and folder organization by applying configurable rules to keep any directory clean and well-structured. It is designed to be fast, extensible, and easy to use, both from the command line and, in future releases, through a graphical user interface.
+**Current version:** `v0.1.0` — functional core
 
----
+## Features
 
-## ✨ Features
+- Directory scanning (single level, non-recursive)
+- Automatic classification by extension via configurable dictionary
+- Automatic creation of destination subfolders
+- File moving to the corresponding category
+- Idempotent behavior: running the script multiple times does not reorganize already-moved files
 
-- 📂 Automatic file organization.
-- 🗃️ File classification by extension, category, or custom rules.
-- ⚙️ Flexible configuration system.
-- 🚀 Fast and efficient processing.
-- 🔒 File overwrite protection.
-- 📄 Operation logging.
-- 🔍 Dry Run mode to preview changes before applying them.
-- ♻️ Scheduled automatic organization.
-- 🧩 Modular architecture for easy future expansion.
-- 🌍 Cross-platform support (Windows, macOS, and Linux).
+## How to run
 
----
-
-## 📦 Technologies
-
-- Python 3.12+
-- pathlib
-- shutil
-- os
-- logging
-- argparse
-- pytest
-
----
-
-## 📂 Project Structure
-
-```text
-JGPOrganizer/
-│
-├── src/
-│   ├── config.py
-│   ├── main.py
-│   ├── organizer.py
-│   └── rules.py
-│
-├── requirements.txt
-├── README.md
-└── LICENSE
+```bash
+python3 main.py
 ```
 
----
+The script will scan the current directory, classify each file by extension, and move it into a matching subfolder (`Imagenes`, `Documentos`, `Audio`, `Video`, `Comprimidos`, `Instaladores`, `Otros`…).
 
-## 🚀 Goals
+## Project structure
 
-The project aims to provide a tool capable of:
+```
+JGP-Organizer/
+├── main.py         # Entry point, coordinates the full flow
+├── config.py       # Classification rules (extension -> category)
+├── rules.py        # Classification logic for a single file
+├── organizer.py    # Folder creation and file moving
+└── README.md
+```
 
-- Automatically organizing the Downloads folder.
-- Classifying documents, images, videos, music, and compressed files.
-- Creating folders automatically when needed.
-- Detecting duplicate files.
-- Renaming files intelligently.
-- Supporting user-defined custom rules.
-- Integrating with operating system scheduled tasks.
+Each module has a single responsibility:
 
----
+- `config.py` → **what** the rules are (data only)
+- `rules.py` → **how** a category is decided for a given file
+- `organizer.py` → **what action** is taken (create folder, move file)
+- `main.py` → orchestrates the flow; contains no business logic itself
 
-## 🛣️ Roadmap
+## Known limitations
 
-### Version 1.0
+- Does not handle duplicate filenames at destination (silently overwrites)
+- No exception handling (permissions, files in use, etc.)
+- Classification rules are hardcoded, not user-configurable yet
+- No graphical interface, console only
 
-- File organization by extension.
-- JSON-based configuration.
-- Logging system.
-- Command-line interface (CLI).
+## Roadmap
 
-### Version 2.0
+- [x] **Phase 1 — MVP**: scanning and basic classification by extension
+- [x] **Phase 1.1 — Move logic**: create destination folders and move files
+- [ ] **Phase 2 — Robustness**: exception handling and duplicate file handling
+- [ ] **Phase 3 — Configurable**: external rules file (JSON), CLI arguments (`argparse`), dry-run mode
+- [ ] **Phase 4 — OOP**: refactor to classes (`Rule`, `Organizer`), classify by date, size, or name pattern
+- [ ] **Phase 5 — Extras**: scheduled automatic execution, graphical interface, undo last organization
 
-- Custom rules.
-- Dry Run mode.
-- Background automatic organization.
-- Duplicate file management.
+## Author
 
-### Version 3.0
-
-- Graphical user interface (GUI).
-- Organization statistics.
-- Configuration profiles.
-- Plugin and extension support.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! If you'd like to help improve the project:
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Make your changes.
-4. Submit a Pull Request.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
----
-
-## ⭐ Planned Features
-
-- Duplicate file detection.
-- AI-powered file organization.
-- Content-based organization rules.
-- Cloud storage synchronization.
-- Operation history.
-- Undo functionality.
-- Modern graphical user interface.
-- Multi-language support.
-
----
-
-JGP Organizer was created with the goal of becoming a powerful, flexible, and extensible solution for automatic file management, following Python best practices and a scalable architecture designed to grow with new features over time.
+Built by JonaDeveloper as a learning project while working toward the PCAP (Certified Associate in Python Programming) certification.
