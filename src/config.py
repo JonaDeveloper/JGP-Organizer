@@ -1,10 +1,8 @@
 
-
-
 classify = {
     #Images
-    '.jgp': 'Images',
-    '.jgep': 'Images',
+    '.jpg': 'Images',
+    '.jpeg': 'Images',
     '.png': 'Images',
     '.webp': 'Images',
     '.gif': 'Images',
