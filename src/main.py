@@ -1,8 +1,12 @@
 from pathlib import Path
 import rules, organizer
 
-# Create a Path object pointing to the current working directory.
-p = Path('.')
+
+# Prompt the user to enter the directory to organize.
+directory = input("Enter the directory you want to sortorganize: ")
+
+# Create a Path object from the user-provided directory.
+p = Path(directory)
 
 # Ensure this code only runs when the script is executed directly.
 if __name__ == "__main__":
@@ -15,7 +19,7 @@ if __name__ == "__main__":
         # Process only files and ignore directories.
         if xfile.is_file():
             # Detect the file category based on the defined rules.
-            category, file = rules.detection(xfile)
+            category, file = rules.classify_file(xfile)
             # Move the file to its corresponding destination.
             organizer.organize_file(category, file)
 

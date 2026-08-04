@@ -1,6 +1,8 @@
 
+# Dictionary that maps file extensions to their corresponding categories.
+
 classify = {
-    #Images
+    # Image file formats.
     '.jpg': 'Images',
     '.jpeg': 'Images',
     '.png': 'Images',
@@ -12,7 +14,7 @@ classify = {
     '.heic': 'Images',
     '.raw': 'Images',
 
-    #Documents
+    # Document file formats.
     '.pdf': 'Documents',
     '.docx': 'Documents',
     '.doc': 'Documents',
@@ -24,7 +26,7 @@ classify = {
     '.tex': 'Documents',
     '.epub': 'Documents',
 
-    #Compress
+    # Compressed archive file formats.
     '.zip': 'Compress',
     '.rar': 'Compress',
     '.7z': 'Compress',
@@ -35,8 +37,8 @@ classify = {
     '.iso': 'Compress',
     '.cab': 'Compress',
     '.zst': 'Compress',
-    
-    #Installers
+
+    # Installer and application package formats.
     '.exe': 'Installers',
     '.msi': 'Installers',
     '.app': 'Installers',
@@ -47,8 +49,8 @@ classify = {
     '.apk': 'Installers',
     '.ipa': 'Installers',
     '.appimage': 'Installers',
-      
-    #Audio
+
+    # Audio file formats.
     '.mp3': 'Audio',
     '.wav': 'Audio',
     '.flac': 'Audio',
@@ -59,18 +61,19 @@ classify = {
     '.aiff': 'Audio',
     '.opus': 'Audio',
     '.mid': 'Audio',
-      
-    #Video
+
+    # Video file formats.
     '.mp4': 'Video',
     '.mkv': 'Video',
     '.avi': 'Video',
     '.mov': 'Video',
     '.wmv': 'Video',
     '.webm': 'Video',
-    '.flv': 'Video', 
+    '.flv': 'Video',
     '.mpeg': 'Video',
     '.3gp': 'Video',
-    '.m4v': 'Video',  
+    '.m4v': 'Video',
 }
 
+# Default category assigned to files with unrecognized extensions.
 unclassified = 'Others'
