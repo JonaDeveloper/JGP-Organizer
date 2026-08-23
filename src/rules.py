@@ -1,3 +1,4 @@
+"""This module provides functionality to classify files based on their extensions."""
 import json
 
 # Load the category mapping from a JSON file.
@@ -7,6 +8,7 @@ with open("categories.json", "r", encoding="utf-8") as file:
 
 # Determine the category of a file based on its extension.
 def classify_file(xfile):
+    """Classify a file based on its extension and return the corresponding category."""
     # Get the file extension in lowercase to ensure case-insensitive matching.
     file_extension = xfile.suffix.lower()
 

@@ -1,4 +1,4 @@
-
+"""Configuration file for file classification."""
 # Dictionary that maps file extensions to their corresponding categories.
 
 classify = {
@@ -76,4 +76,4 @@ classify = {
 }
 
 # Default category assigned to files with unrecognized extensions.
-unclassified = 'Others'
+UNCLASSIFIED = 'Others'
