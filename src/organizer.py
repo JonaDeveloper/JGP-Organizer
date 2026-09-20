@@ -1,6 +1,70 @@
 """This module provides functionality to organize files into folders based on their extensions."""
 import shutil
 
+class FileOrganizer:
+    """A class to organize files into folders based on their extensions."""
+    # Initialize the FileOrganizer with a dry_run option.
+    def __init__(self, dry_run):
+        self.dry_run = dry_run
+
+
+
+    def organize_file(self, file, category):
+        """Move a file to its corresponding category folder."""
+        # Create the destination folder inside the file's parent directory.
+        destination_folder = file.parent / category
+
+        if not self.dry_run:
+            destination_folder.mkdir(exist_ok=True)
+
+        # Build the full destination path for the file.
+        destination_file = destination_folder / file.name
+
+        # Check if a file with the same name already exists.
+        if destination_file.exists():
+            # Handle the duplicate file.
+            return self.handle_duplicate(file, destination_folder)
+        else:
+            if not self.dry_run:
+                # Move the file to the destination folder.
+                shutil.move(str(file), str(destination_file))
+                return True  # Indicate that the file was successfully moved.
+            else:
+                print(f"[SIMULATION] Would move {file} -> {destination_file}")
+                return False  # Indicate that the file was not actually moved in dry run mode.
+
+
+
+    def handle_duplicate(self, file, destination_folder):
+        """Handle duplicate files by assigning a unique name before moving them to the Duplicates
+            folder."""
+        # Create the Duplicates folder if it does not exist.
+        duplicates_folder = destination_folder / "Duplicates"
+
+        if not self.dry_run:
+            duplicates_folder.mkdir(exist_ok=True)
+        # Initialize the duplicate counter.
+        counter = 1
+
+        # Start with "(1)" as the suffix for the first duplicate.
+        candidate_name = f"{file.stem}({counter}){file.suffix}"
+        duplicate_path = duplicates_folder / candidate_name
+
+        # Keep generating a new filename until an available one is found.
+        while duplicate_path.exists():
+            counter += 1
+            candidate_name = f"{file.stem}({counter}){file.suffix}"
+            duplicate_path = duplicates_folder / candidate_name
+
+        if not self.dry_run:
+            # Move the file using the unique filename.
+            shutil.move(str(file), str(duplicate_path))
+            return True  # Indicate that the file was successfully moved.
+        else:
+            print(f"[SIMULATION] Would move {file} -> {duplicate_path}")
+            return False  # Indicate that the file was not actually moved in dry run mode.
+
+
 
 # Move a file to its corresponding category folder.
 def organize_file(category, file, dry_run):
@@ -27,8 +91,8 @@ def organize_file(category, file, dry_run):
 
 
 def handle_duplicate(file, destination_folder, dry_run):
-    """Handle duplicate files by assigning a unique name before moving them to the Duplicates folder.
-    """
+    """Handle duplicate files by assigning a unique name before moving them to the Duplicates 
+    folder."""
     # Create the Duplicates folder if it does not exist.
     duplicates_folder = destination_folder / "Duplicates"
 

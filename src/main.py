@@ -1,6 +1,7 @@
 """This module contains the main function to organize files in a specified directory."""
 from pathlib import Path
 from os import access, R_OK, W_OK
+import shutil
 import organizer
 import rules
 
@@ -23,16 +24,16 @@ def main():
 
     if not dry_run:
         # Display the absolute path of the directory being organized.
-        print(f"\n\t• Organizing files in directory...\n")
+        print("\n\t• Organizing files in directory...\n")
     else:
-        print(f"\n\t• Simulating organization in directory... \n")
+        print("\n\t• Simulating organization in directory... \n")
 
     # Organize the files in the specified directory.
     count_organized, count_errors = organize_directory(directory, dry_run)
 
     # Display a summary of the organization process.
     show_summary(count_organized, count_errors, directory, dry_run)
-    
+
     # Display a farewell message to the user.
     print("\n• Thank you for using the JGP-Organizer! Goodbye!\n\n")
 
@@ -53,14 +54,16 @@ def get_directory():
 
 
 
-def organize_directory(path, dry_run=True):
+def organize_directory(path, dry_run):
     """Organize files in the specified directory based on their extensions."""
     # Initialize a counter for the number of files organized.
     count_organized = 0
     # Initialize a counter for the number of files that could not be organized due to problems.
     count_errors = 0
+    # Create an instance of the FileOrganizer class.
+    file_organizer = organizer.FileOrganizer(dry_run)
 
-        # Iterate through every item in the current directory.
+    # Iterate through every item in the current directory.
     for xfile in path.iterdir():
         # Process only files and ignore directories and hidden files (those starting with a dot).
         if xfile.is_file() and not xfile.name.startswith('.'):
@@ -75,12 +78,12 @@ def organize_directory(path, dry_run=True):
                     # Detect the file category based on the defined rules.
                     category, file = rules.classify_file(xfile)
                     # Move the file to its corresponding destination.
-                    organizer.organize_file(category, file, dry_run)
-                    if not dry_run:
+                    result = file_organizer.organize_file(file, category)
+                    if result:
                         count_organized += 1  # Increment the count of organized files.
                 # Handle any errors that occurer during the file organization process.
-                except Exception as e:
-                    # Increment the count_errors if there are problems and display the error message.
+                except (FileNotFoundError, PermissionError, OSError, shutil.Error) as e:
+                    # Increment the count_errors and display the error message.
                     count_errors += 1
                     print(f"\n• An error occurred while organizing {xfile}: {e}\n")
     return count_organized, count_errors  # Return the counts of organized files and errors.
