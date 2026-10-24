@@ -245,24 +245,32 @@ def update_rule(rule, db_path="data/database.db"):
         return (None, None, "database_error")
 
 
-def delete_rule(rule):
+def delete_rule(rule_id, db_path="data/database.db"):
     """Delete an existing custom rule in the database."""
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
+    try:
+        with get_connection(db_path) as conn:
+            cursor = conn.cursor()
 
-        cursor.execute('SELECT is_default FROM rules WHERE id = ?',
-                        (rule.id,)
-                        )
-        result = cursor.fetchone()
+            cursor.execute('SELECT is_default FROM rules WHERE id = ?',
+                            (rule_id,)
+                            )
+            result = cursor.fetchone()
 
-        if result is None:
-            return False
+            if result is None:
+                return (False, None, "invalid_rule")
+            if result[0] == 1:
+                return (False, None, "invalid_rule")
 
-        if result[0] == 1:
-            return False
 
-        cursor.execute('DELETE FROM rules WHERE id = ? AND is_default = 0',
-                       (rule.id,)
-                       )
-        return cursor.rowcount == 1
+            cursor.execute('DELETE FROM rules WHERE id = ? AND is_default = 0',
+                            (rule_id,)
+                            )
+
+            if cursor.rowcount == 1:
+                return (True, None, "success")
+            else:
+                return (None, None, "delete_failed")
+
+    except sqlite3.Error:
+        return (None, None, "database_error")
