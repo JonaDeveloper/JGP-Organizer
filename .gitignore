@@ -1,2 +1,11 @@
-.DS_Store
-*.xlsx
+# Entorno virtual
+.venv/
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+
+# Caché y resultados temporales de pytest
+.pytest_cache/
+.coverage
+htmlcov/

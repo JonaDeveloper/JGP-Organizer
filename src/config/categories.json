@@ -1,0 +1,61 @@
+{
+    "configuration": {
+        "mode": "hierarchical"
+    },
+
+    "rules":    [
+                    {
+                        "id": 1, 
+                        "type": "extension",
+                        "value": [".jpg", ".png", ".gif", ".bmp", ".webp"],
+                        "category": "Images",
+                        "priority": 1,
+                        "parent_id": null
+                    },
+
+                    {
+                        "id": 2,
+                        "type": "extension",
+                        "value": [".mp4", ".avi", ".mov", ".wmv", ".mkv"],
+                        "category": "Videos",
+                        "priority": 1,
+                        "parent_id": null
+                    },
+
+                    {
+                        "id": 3,
+                        "type": "extension",
+                        "value": [".pdf", ".docx", ".xls", ".xlsx", ".pptx"],
+                        "category": "Documents",
+                        "priority": 1,
+                        "parent_id": null
+                    },
+
+                    {
+                        "id": 4,
+                        "type": "extension",
+                        "value": [".mp3", ".wav", ".flac", ".aac", ".ogg"],
+                        "category": "Audio",
+                        "priority": 1,
+                        "parent_id": null
+                    },
+
+                    {
+                        "id": 5,
+                        "type": "extension",
+                        "value": [".zip", ".rar", ".7z", ".tar", ".gz"],
+                        "category": "Archives",
+                        "priority": 1,
+                        "parent_id": null
+                    },
+
+                    {
+                        "id": 6,
+                        "type": "extension",
+                        "value": [".exe", ".msi", ".bat", ".app", ".dmg"],
+                        "category": "Executables",
+                        "priority": 1,
+                        "parent_id": null
+                    }
+                ]
+}
