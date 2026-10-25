@@ -109,7 +109,7 @@ def initialize_rules_database(db_path="data/database.db"):
                 )
                 )
                 result = cursor.lastrowid
-                rule.id = result  # Update the rule's id with the last inserted row id
+                rule.rule_id = result  # Update the rule's id with the last inserted row id
 
 
 def insert_rule(rule, db_path="data/database.db"):
@@ -153,8 +153,8 @@ def insert_rule(rule, db_path="data/database.db"):
                         rule.is_default
                     )
                     )
-
-                    rule.id = cursor.lastrowid  # Update the rule's id with the last inserted row id
+                    # Update the rule's id with the last inserted row id
+                    rule.rule_id = cursor.lastrowid
                     return (True, None, "success")
 
             else:
@@ -201,7 +201,7 @@ def update_rule(rule, db_path="data/database.db"):
             cursor = conn.cursor()
 
             cursor.execute('SELECT is_default FROM rules WHERE id = ?',
-                            (rule.id,)
+                            (rule.rule_id,)
                             )
             result = cursor.fetchone()
 
@@ -211,7 +211,7 @@ def update_rule(rule, db_path="data/database.db"):
                 return (False, None, "invalid_rule")
 
 
-            validator = RuleConflictValidator(rule, conn, rule.id)
+            validator = RuleConflictValidator(rule, conn, rule.rule_id)
             has_conflict, extensions, reason = validator.validate_conflicts()
 
             if has_conflict is True:
@@ -233,7 +233,7 @@ def update_rule(rule, db_path="data/database.db"):
                 rule.category,
                 rule.priority,
                 rule.parent_id,
-                rule.id
+                rule.rule_id
             )
             )
             if cursor.rowcount == 1:
