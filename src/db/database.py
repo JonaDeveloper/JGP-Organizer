@@ -1,29 +1,84 @@
-""" This module provides functionality to manage the SQLite database for storing rules.
-It includes functions to initialize the database, insert and retrieve existing information."""
+"""
+Provides database operations for managing file organization rules.
+
+This module handles SQLite database initialization, connection management,
+and CRUD operations for file organization rules. It supports the creation
+of default rules, insertion of custom rules, retrieval of stored rules,
+updates, and deletion of custom rules.
+
+Rule values are serialized to JSON when stored and deserialized when
+retrieved. Custom rule insertion and updates include conflict checks to
+prevent duplicate file extensions, while default rules are protected
+from modification and deletion.
+
+The module uses a context manager to manage database connections and
+transactions, ensuring that changes are committed on success and rolled
+back when an exception occurs.
+"""
 
 import sqlite3
 import json
 from contextlib import contextmanager
-from src.core.models import Rule  # Import the Rule class from the models module
+from src.core.models import Rule
 from src.validator import RuleConflictValidator
 
 
 @contextmanager
 def get_connection(db_path="data/database.db"):
-    """Get a connection to the SQLite database."""
+    """
+    Provides a database connection using a context manager.
+
+    Opens a connection to the SQLite database and yields it for use
+    within a with statement. Commits the transaction if the operations
+    complete successfully, rolls back the transaction if an exception
+    occurs, and closes the connection in all cases.
+
+    Args:
+        db_path (str, optional): The path to the SQLite database file.
+            Defaults to "data/database.db".
+
+    Yields:
+        sqlite3.Connection: An active database connection.
+
+    Raises:
+        Exception: Re-raises any exception raised during the database
+                operations after rolling back the transaction.
+    """
+
     conn = sqlite3.connect(db_path)
     try:
         yield conn
-        conn.commit()  # Commit the transaction if no exceptions occurred
+        conn.commit()
     except Exception:
-        conn.rollback()  # Rollback the transaction in case of an exception
-        raise  # Re-raise the exception to be handled by the caller
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
 
 def initialize_rules_database(db_path="data/database.db"):
-    """Initialize the SQLite database and create the 'rules' table if it doesn't exist."""
+    """
+    Initializes the rules database by creating the rules table if it
+    does not already exist and inserting the default rules when the
+    table is empty.
+
+    Creates the table with columns for the rule ID, type, value,
+    category, priority, parent ID, and default rule status.
+
+    Defines the default rules for common file categories, including
+    images, videos, documents, audio, archives, and executables.
+    Serializes rule values to JSON when necessary before inserting
+    them into the database.
+
+    Assigns each inserted default rule its generated database ID.
+
+    Args:
+        db_path (str, optional): The path to the SQLite database file.
+            Defaults to "data/database.db".
+
+    Returns:
+        None: Initializes the database without returning a value.
+    """
 
     # Use the context manager to handle the database connection
     with get_connection(db_path) as conn:
@@ -113,7 +168,36 @@ def initialize_rules_database(db_path="data/database.db"):
 
 
 def insert_rule(rule, db_path="data/database.db"):
-    """Insert a new rule into the database."""
+    """
+    Inserts a new custom rule into the database after validating its
+    eligibility and checking for conflicts with existing extensions.
+
+    Verifies that the rule is not a default rule and checks whether
+    the maximum limit of five custom rules has been reached. If the
+    limit has not been reached, validates the rule for extension
+    conflicts before inserting it into the database.
+
+    Serializes the rule value to JSON if it is not already a string.
+    After a successful insertion, assigns the generated database ID
+    to the rule instance.
+
+    Args:
+        rule: The Rule instance containing the attributes to insert.
+        db_path (str, optional): The path to the SQLite database file.
+            Defaults to "data/database.db".
+
+    Returns:
+        tuple:
+            - bool | None: True if the rule is inserted successfully,
+                False if the rule is invalid, contains conflicting
+                extensions, or the custom rule limit has been reached.
+                None if a database error occurs.
+            - tuple | None: A tuple containing conflicting extensions
+                if a conflict is detected, or None otherwise.
+            - str: Result code indicating the outcome, such as
+                'success', 'invalid_rule', 'duplicate_extension',
+                'rule_limit_reached', or 'database_error'.
+    """
 
     if rule.is_default != 0:
         return (False, None, "invalid_rule")
@@ -165,8 +249,19 @@ def insert_rule(rule, db_path="data/database.db"):
 
 
 def get_rules():
-    """Retrieve all rules from the database and return them as a list of Rule objects."""
+    """
+    Retrieves all rules stored in the database and converts them into
+    Rule instances.
 
+    Executes a query to fetch all records from the rules table and
+    reconstructs each rule, deserializing JSON values into Python lists
+    or dictionaries when applicable.
+
+    Returns:
+        list: A list of Rule objects containing the stored attributes,
+        including rule ID, type, value, category, priority, parent ID,
+        and default rule status.
+    """
     with get_connection() as conn:
         cursor = conn.cursor()
 
@@ -191,7 +286,33 @@ def get_rules():
 
 
 def update_rule(rule, db_path="data/database.db"):
-    """Update an existing custom rule in the database."""
+    """
+    Updates an existing custom rule in the database.
+
+    Verifies that the rule is not a default rule and that its
+    identifier corresponds to an existing custom rule. Checks for
+    conflicts with existing extensions before updating the rule.
+
+    Serializes the rule value to JSON when it is not a string, then
+    updates the rule's type, value, category, priority, and parent ID.
+
+    Args:
+        rule: The Rule instance containing the updated attributes
+            and the identifier of the rule to update.
+        db_path (str, optional): The path to the SQLite database file.
+            Defaults to "data/database.db".
+
+    Returns:
+        tuple:
+            - bool | None: True if the rule is updated successfully,
+                False if the rule is invalid or has conflicting extensions,
+                or None if a database error or update failure occurs.
+            - tuple | None: A tuple of conflicting extensions if a
+                conflict is detected, or None otherwise.
+            - str: Result code indicating the outcome, such as
+                'success', 'invalid_rule', 'duplicate_extension',
+                'update_failed', or 'database_error'.
+    """
 
     if rule.is_default != 0:
         return (False, None, "invalid_rule")
@@ -200,16 +321,16 @@ def update_rule(rule, db_path="data/database.db"):
         with get_connection(db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute('SELECT is_default FROM rules WHERE id = ?',
-                            (rule.rule_id,)
-                            )
+            cursor.execute(
+                'SELECT is_default FROM rules WHERE id = ?',
+                (rule.rule_id,)
+            )
             result = cursor.fetchone()
 
             if result is None:
                 return (False, None, "invalid_rule")
             if result[0] == 1:
                 return (False, None, "invalid_rule")
-
 
             validator = RuleConflictValidator(rule, conn, rule.rule_id)
             has_conflict, extensions, reason = validator.validate_conflicts()
@@ -219,12 +340,11 @@ def update_rule(rule, db_path="data/database.db"):
             if has_conflict is None:
                 return (None, None, reason)
 
-
             rule_value = rule.value if isinstance(
                 rule.value, str) else json.dumps(rule.value)
 
             cursor.execute('''
-            UPDATE rules 
+            UPDATE rules
             SET type = ?, value = ?, category = ?, priority = ?, parent_id = ?
             WHERE id = ? AND is_default = 0
             ''', (
@@ -246,15 +366,36 @@ def update_rule(rule, db_path="data/database.db"):
 
 
 def delete_rule(rule_id, db_path="data/database.db"):
-    """Delete an existing custom rule in the database."""
+    """
+    Deletes a custom rule from the database using its identifier.
+
+    Checks whether the specified rule exists and prevents the deletion
+    of default rules. Deletes the rule only if it exists and is not
+    marked as a default rule.
+
+    Args:
+        rule_id (int): The identifier of the rule to delete.
+        db_path (str, optional): The path to the SQLite database file.
+            Defaults to "data/database.db".
+
+    Returns:
+        tuple:
+            - bool | None: True if the rule is deleted successfully,
+                False if the rule is invalid, or None if the deletion
+                fails or a database error occurs.
+            - None: Placeholder for additional result data.
+            - str: Result code: 'success', 'invalid_rule',
+                'delete_failed', or 'database_error'.
+    """
 
     try:
         with get_connection(db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute('SELECT is_default FROM rules WHERE id = ?',
-                            (rule_id,)
-                            )
+            cursor.execute(
+                'SELECT is_default FROM rules WHERE id = ?',
+                (rule_id,)
+            )
             result = cursor.fetchone()
 
             if result is None:
@@ -262,10 +403,10 @@ def delete_rule(rule_id, db_path="data/database.db"):
             if result[0] == 1:
                 return (False, None, "invalid_rule")
 
-
-            cursor.execute('DELETE FROM rules WHERE id = ? AND is_default = 0',
-                            (rule_id,)
-                            )
+            cursor.execute(
+                'DELETE FROM rules WHERE id = ? AND is_default = 0',
+                (rule_id,)
+            )
 
             if cursor.rowcount == 1:
                 return (True, None, "success")
