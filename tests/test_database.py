@@ -80,14 +80,14 @@ def test_insert_rule_limit(test_db):
     for number in range(5):
         rule = create_rule(
             extension=f".jgp_limit{number}",
-            priority=number + 2,
+            priority= 2,
         )
 
         result = insert_rule(rule, db_path=test_db)
 
         assert result == (True, None, "success")
 
-    extra_rule = create_rule(".jgp_limit_extra", priority=10)
+    extra_rule = create_rule(".jgp_limit_extra", priority=2)
 
     result = insert_rule(extra_rule, db_path=test_db)
 
@@ -107,7 +107,7 @@ def test_update_rule_success(test_db):
 
     rule.value = [".jgp_after_update"]
     rule.category = "Updated"
-    rule.priority = 5
+    rule.priority = 4
 
     result = update_rule(rule, db_path=test_db)
 
@@ -122,13 +122,13 @@ def test_update_rule_success(test_db):
     assert row is not None
     assert row[0] == '[".jgp_after_update"]'
     assert row[1] == "Updated"
-    assert row[2] == 5
+    assert row[2] == 4
 
 
 def test_update_rule_nonexistent(test_db):
     """A nonexistent rule should not be updated."""
     rule = create_rule(".jgp_missing_update")
-    rule.id = 999999
+    rule.rule_id = 999999
 
     result = update_rule(rule, db_path=test_db)
 

@@ -20,7 +20,7 @@ import sqlite3
 import json
 from contextlib import contextmanager
 from src.core.models import Rule
-from src.validator import RuleConflictValidator
+from src.validator import RuleValidator,  RuleConflictValidator
 
 
 @contextmanager
@@ -170,19 +170,22 @@ def initialize_rules_database(db_path="data/database.db"):
 def insert_rule(rule, db_path="data/database.db"):
     """
     Inserts a new custom rule into the database after validating its
-    eligibility and checking for conflicts with existing extensions.
+    attributes and checking for conflicts with existing rules.
 
     Verifies that the rule is not a default rule and checks whether
-    the maximum limit of five custom rules has been reached. If the
-    limit has not been reached, validates the rule for extension
-    conflicts before inserting it into the database.
+    the maximum limit of five custom rules has been reached. Retrieves
+    existing rule IDs and validates the new rule's type, value, priority,
+    and parent ID using RuleValidator.
+
+    If the rule passes validation, checks for duplicate extensions
+    using RuleConflictValidator before proceeding with the insertion.
 
     Serializes the rule value to JSON if it is not already a string.
     After a successful insertion, assigns the generated database ID
     to the rule instance.
 
     Args:
-        rule: The Rule instance containing the attributes to insert.
+        rule (Rule): The rule instance containing the attributes to insert.
         db_path (str, optional): The path to the SQLite database file.
             Defaults to "data/database.db".
 
@@ -191,7 +194,8 @@ def insert_rule(rule, db_path="data/database.db"):
             - bool | None: True if the rule is inserted successfully,
                 False if the rule is invalid, contains conflicting
                 extensions, or the custom rule limit has been reached.
-                None if a database error occurs.
+                None if a database error occurs during conflict validation
+                or insertion.
             - tuple | None: A tuple containing conflicting extensions
                 if a conflict is detected, or None otherwise.
             - str: Result code indicating the outcome, such as
@@ -211,8 +215,20 @@ def insert_rule(rule, db_path="data/database.db"):
 
             if result[0] < 5:
 
-                validator = RuleConflictValidator(rule, conn)
-                has_conflict, extensions, reason = validator.validate_conflicts()
+                cursor.execute('SELECT id FROM rules')
+                database_rule_ids = cursor.fetchall()
+
+                existing_rule_ids = []
+                for row in database_rule_ids:
+                    existing_rule_ids.append(row[0])
+
+                rule_validator = RuleValidator(rule, existing_rule_ids)
+                validation_results = rule_validator.validate_rule()
+                if not all(validation_results.values()):
+                    return (False, None, "invalid_rule")
+
+                rule_conflict_validator = RuleConflictValidator(rule, conn)
+                has_conflict, extensions, reason = rule_conflict_validator.validate_conflicts()
 
                 if has_conflict is True:
                     return (False, extensions, reason)
@@ -220,26 +236,26 @@ def insert_rule(rule, db_path="data/database.db"):
                 if has_conflict is None:
                     return (None, None, reason)
 
-                else:
-                    # Convert the value to a JSON string if it's not already a string
-                    rule_value = rule.value if isinstance(
-                        rule.value, str) else json.dumps(rule.value)
 
-                    cursor.execute('''
-                    INSERT INTO rules (type, value, category, priority, parent_id, is_default)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    ''', (
-                        rule.rule_type,
-                        rule_value,
-                        rule.category,
-                        rule.priority,
-                        rule.parent_id,
-                        rule.is_default
-                    )
-                    )
-                    # Update the rule's id with the last inserted row id
-                    rule.rule_id = cursor.lastrowid
-                    return (True, None, "success")
+                # Convert the value to a JSON string if it's not already a string
+                rule_value = rule.value if isinstance(
+                    rule.value, str) else json.dumps(rule.value)
+
+                cursor.execute('''
+                INSERT INTO rules (type, value, category, priority, parent_id, is_default)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ''', (
+                    rule.rule_type,
+                    rule_value,
+                    rule.category,
+                    rule.priority,
+                    rule.parent_id,
+                    rule.is_default
+                )
+                )
+                # Update the rule's id with the last inserted row id
+                rule.rule_id = cursor.lastrowid
+                return (True, None, "success")
 
             else:
                 return (False, None, "rule_limit_reached")
@@ -332,8 +348,20 @@ def update_rule(rule, db_path="data/database.db"):
             if result[0] == 1:
                 return (False, None, "invalid_rule")
 
-            validator = RuleConflictValidator(rule, conn, rule.rule_id)
-            has_conflict, extensions, reason = validator.validate_conflicts()
+            cursor.execute('SELECT id FROM rules')
+            database_rule_ids = cursor.fetchall()
+
+            existing_rule_ids = []
+            for row in database_rule_ids:
+                existing_rule_ids.append(row[0])
+
+            rule_validator = RuleValidator(rule, existing_rule_ids)
+            validation_results = rule_validator.validate_rule()
+            if not all(validation_results.values()):
+                return (False, None, "invalid_rule")
+
+            conflict_validator = RuleConflictValidator(rule, conn, rule.rule_id)
+            has_conflict, extensions, reason = conflict_validator.validate_conflicts()
 
             if has_conflict is True:
                 return (False, extensions, reason)

@@ -3,17 +3,31 @@
 import re
 import sqlite3
 import json
+import math
 
 
 class RuleValidator:
     """
-    Validates rule attributes to ensure they meet the required
-    constraints before the rules are processed or stored.
+    Validates rule attributes to ensure they comply with the required
+    constraints before being processed or stored.
+
+    Supports validation of rule types, values, priorities, and parent
+    identifiers. Handles type-specific value validation for extensions,
+    names, regular expressions, and file sizes.
     """
 
     allowed_types = ["extension", "name", "regex", "size"]
 
     def __init__(self, rule, rule_ids):
+        """
+        Initializes the validator with a rule and the available rule IDs.
+
+        Args:
+            rule: The rule instance to validate.
+            rule_ids: A collection of valid rule IDs used to validate
+                the parent_id attribute.
+        """
+
         self.rule = rule
         self.rule_ids = rule_ids
 
@@ -23,7 +37,7 @@ class RuleValidator:
         Returns:
             bool: True if the rule type is allowed, False otherwise.
         """
-        return self.rule.type in self.allowed_types
+        return self.rule.rule_type in self.allowed_types
 
     def validate_value(self):
         """
@@ -39,22 +53,24 @@ class RuleValidator:
         Returns:
             bool: True if the value meets the requirements for its type, False otherwise.
         """
-        if self.rule.type == "extension":
+        if self.rule.rule_type == "extension":
             return (
                 isinstance(self.rule.value, list)
                 and len(self.rule.value) > 0
-                and all(isinstance(ext, str) and ext.startswith('.')
+                and all(isinstance(ext, str)
+                        and ext.startswith('.')
+                        and len(ext) > 1
                         for ext in self.rule.value
                         )
             )
 
         # Validate the value for the "name" type.
-        elif self.rule.type == "name":
-            return isinstance(self.rule.value, str) and len(self.rule.value) > 0
+        elif self.rule.rule_type == "name":
+            return isinstance(self.rule.value, str) and len(self.rule.value.strip()) > 0
 
         # Validate the value for the "regex" type.
-        elif self.rule.type == "regex":
-            if not isinstance(self.rule.value, str) or len(self.rule.value) == 0:
+        elif self.rule.rule_type == "regex":
+            if not isinstance(self.rule.value, str) or len(self.rule.value.strip()) == 0:
                 return False
             try:
                 re.compile(self.rule.value)
@@ -63,14 +79,16 @@ class RuleValidator:
                 return False
 
         # Validate the value for the "size" type.
-        elif self.rule.type == "size":
+        elif self.rule.rule_type == "size":
             return (
                 isinstance(self.rule.value, dict)
                 and "operator" in self.rule.value
                 and self.rule.value["operator"] in [">", "<", ">=", "<=", "==", "!="]
                 and "amount" in self.rule.value
+                and not isinstance(self.rule.value["amount"], bool)
                 and isinstance(self.rule.value["amount"], (int, float))
                 and self.rule.value["amount"] > 0
+                and math.isfinite(self.rule.value["amount"])
                 and "unit" in self.rule.value
                 and self.rule.value["unit"] in ["KB", "MB", "GB", "TB"]
             )
@@ -84,7 +102,12 @@ class RuleValidator:
         Returns:
             bool: True if the priority is valid, False otherwise.
         """
-        return isinstance(self.rule.priority, int) and self.rule.priority in range(1, 5)
+
+        return (
+            isinstance(self.rule.priority, int)
+            and not isinstance(self.rule.priority, bool)
+            and self.rule.priority in range(1, 5)
+        )
 
     def validate_parent_id(self):
         """
@@ -92,7 +115,16 @@ class RuleValidator:
         Returns:
             bool: True if the parent_id is valid, False otherwise.
         """
-        return self.rule.parent_id is None or self.rule.parent_id in self.rule_ids
+
+        return (
+            self.rule.parent_id is None
+            or (
+                isinstance(self.rule.parent_id, int)
+                and not isinstance(self.rule.parent_id, bool)
+                and self.rule.parent_id in self.rule_ids
+                and self.rule.parent_id != self.rule.rule_id
+            )
+        )
 
     def validate_rule(self):
         """
@@ -123,20 +155,20 @@ class RuleConflictValidator:
 
     def validate_conflicts(self):
         """
-        Checks whether the new rule conflicts with extensions already
-        registered in the database.
+    Checks whether the new rule conflicts with extensions already
+    registered in the database.
 
-        Queries rules of type 'extension' and compares their values with
-        those of the new rule, returning any matching extensions.
+    Queries rules of type 'extension' and compares their values with
+    those of the new rule, returning any matching extensions.
 
-        Returns:
-            tuple:
-                - bool | None: True if conflicts are found, False if no 
-                                conflicts exist, or None if a database error occurs.
-                - tuple | None: A tuple of conflicting extensions,
-                                or None if no conflicts are found.
-                - str: Result code ('duplicate_extension', 'success', or 'database_error').
-        """
+    Returns:
+        tuple:
+            - bool | None: True if conflicts are found, False if no
+                            conflicts exist, or None if a database error occurs.
+            - tuple | None: A tuple of conflicting extensions,
+                            or None if no conflicts are found.
+            - str: Result code ('duplicate_extension', 'success', or 'database_error').
+    """
 
         consult = self.new_rule.value
 

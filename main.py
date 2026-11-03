@@ -436,6 +436,20 @@ def edit_rule():
 
 
 def select_rule_to_edit():
+    """
+    Prompts the user to select an existing rule from the database
+    for editing.
+
+    Retrieves and displays the available rules, requests a rule ID,
+    and searches for the corresponding rule. Handles invalid input
+    and displays an error message if the specified rule does not
+    exist or if no rules are available.
+
+    Returns:
+        Rule | None: The selected Rule instance if found, or None
+        if no rules are available or the specified rule ID does not
+        match an existing rule.
+    """
 
     rules_db = show_rules()
 
@@ -473,6 +487,34 @@ def select_rule_to_edit():
 
 
 def get_updated_rule_data(selected_rule):
+    """
+    Prompts the user to enter updated values for an existing rule.
+
+    Allows the user to modify the file extensions, category, and priority
+    while preserving the current values when the user presses Enter.
+    Keeps the original rule type and parent ID unchanged.
+
+    Validates the entered extensions to ensure that each one starts
+    with a dot and contains at least one character after it. Validates
+    the category to ensure it is not empty and the priority to ensure
+    it is an integer between 1 and 4, inclusive.
+
+    Args:
+        selected_rule (Rule): The existing rule whose attributes are
+            used as the default values and whose data will be updated.
+
+    Returns:
+        tuple: A tuple containing the updated rule attributes in the
+        following order:
+            - rule_type: The original rule type.
+            - value: The updated list of extensions, or the original
+                list if no changes are made.
+            - category: The updated category name, or the original
+                category if no changes are made.
+            - priority: The updated priority, or the original priority
+                if no changes are made.
+            - parent_id: The original parent rule ID.
+    """
 
     rule_type = selected_rule.rule_type
 
@@ -542,6 +584,26 @@ def get_updated_rule_data(selected_rule):
 
 
 def delete_rule():
+    """
+    Prompts the user to select and delete an existing custom rule.
+
+    Retrieves and displays the available rules, requests the ID of the
+    rule to delete, and verifies that the selected rule exists.
+    Prevents the deletion of default rules in the free version.
+
+    Displays the selected custom rule and requests confirmation before
+    attempting to delete it from the database. Reports the result of
+    the deletion operation, handling invalid rules, deletion failures,
+    database errors, and unexpected outcomes.
+
+    If no rules are available or the selected rule does not exist,
+    displays an appropriate error message. If the user cancels the
+    deletion, the function returns without modifying the database.
+
+    Returns:
+        None: Handles user interaction and deletion results without
+        returning a value.
+    """
 
     rules_db = show_rules()
 
@@ -765,23 +827,6 @@ def show_summary(count_organized, count_errors, directory, dry_run):
                     f"\t• {count_errors} files could not be organized due to permission issues."
                     "Please check the permission settings for the files.\n"
                 )
-
-
-# rules_list = database.get_rules()
-# rule_ids = [rule.id for rule in rules_list]
-# rule_validator = RuleValidator(rule=rules_list[0], rule_ids=rule_ids)
-# rule_validated = all(rule_validator.validate_rule().values())
-# validation_results = rule_validator.validate_rule()
-
-
-# if rule_validated:
-    # print("\n\t• Rule is valid.\n")
-# else:
-    # for attribute, is_valid in validation_results.items():
-        # if is_valid:
-            # print(f"\n\t• Rule attribute '{attribute}' is valid.")
-        # else:
-            # print(f"\n\t• Rule attribute '{attribute}' is invalid.")
 
 
 if __name__ == "__main__":
