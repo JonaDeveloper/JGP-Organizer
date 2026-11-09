@@ -11,14 +11,15 @@ class RuleValidator:
     Validates rule attributes to ensure they comply with the required
     constraints before being processed or stored.
 
-    Supports validation of rule types, values, priorities, and parent
-    identifiers. Handles type-specific value validation for extensions,
-    names, regular expressions, and file sizes.
+    Supports validation of rule types, values, priorities, parent
+    identifiers, and circular relationships in the rule hierarchy.
+    Handles type-specific value validation for extensions, names,
+    regular expressions, and file sizes.
     """
 
     allowed_types = ["extension", "name", "regex", "size"]
 
-    def __init__(self, rule, rule_ids):
+    def __init__(self, rule, rule_ids, parent_relations=None):
         """
         Initializes the validator with a rule and the available rule IDs.
 
@@ -30,6 +31,7 @@ class RuleValidator:
 
         self.rule = rule
         self.rule_ids = rule_ids
+        self.parent_relations = parent_relations or {}
 
     def validate_type(self):
         """
@@ -126,19 +128,60 @@ class RuleValidator:
             )
         )
 
+    def validate_parent_cycle(self):
+        """
+        Checks whether assigning the current parent ID would create
+        a circular relationship in the rule hierarchy.
+
+        Returns:
+            bool: True if no cycle exists and the hierarchy is valid,
+                    False otherwise.
+        """
+        if self.rule.parent_id is None:
+            return True
+
+        current_parent_id = self.rule.parent_id
+        visited = set()
+
+        while current_parent_id is not None:
+
+            # Detect a direct or indirect reference to the current rule.
+            if current_parent_id == self.rule.rule_id:
+                return False
+
+            # Detect an existing circular relationship.
+            if current_parent_id in visited:
+                return False
+
+            # Ensure the current parent exists in the hierarchy mapping.
+            if current_parent_id not in self.parent_relations:
+                return False
+
+            visited.add(current_parent_id)
+
+            # Move to the next parent in the hierarchy.
+            current_parent_id = self.parent_relations[current_parent_id]
+
+        return True
+
     def validate_rule(self):
         """
+
         Validates all supported attributes of the rule.
-        Checks the rule type, value, priority, and parent ID independently.
+
+        Checks the rule type, value, priority, parent ID, and
+        potential circular relationships in the hierarchy.
+
         Returns:
-            dict: A dictionary mapping each attribute name to a boolean
-            indicating whether its validation passed.
+            dict: A dictionary mapping each validation attribute
+                to a boolean indicating whether it passed.
         """
         return {
             "type": self.validate_type(),
             "value": self.validate_value(),
             "priority": self.validate_priority(),
-            "parent_id": self.validate_parent_id()
+            "parent_id": self.validate_parent_id(),
+            "parent_cycle": self.validate_parent_cycle()
         }
 
 

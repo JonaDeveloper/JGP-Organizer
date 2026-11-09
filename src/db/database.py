@@ -215,14 +215,17 @@ def insert_rule(rule, db_path="data/database.db"):
 
             if result[0] < 5:
 
-                cursor.execute('SELECT id FROM rules')
-                database_rule_ids = cursor.fetchall()
+                cursor.execute('SELECT id, parent_id FROM rules')
+                database_rules = cursor.fetchall()
+
+                parent_relations = dict(database_rules)
 
                 existing_rule_ids = []
-                for row in database_rule_ids:
+                for row in database_rules:
                     existing_rule_ids.append(row[0])
 
-                rule_validator = RuleValidator(rule, existing_rule_ids)
+                rule_validator = RuleValidator(
+                    rule, existing_rule_ids, parent_relations)
                 validation_results = rule_validator.validate_rule()
                 if not all(validation_results.values()):
                     return (False, None, "invalid_rule")
@@ -235,7 +238,6 @@ def insert_rule(rule, db_path="data/database.db"):
 
                 if has_conflict is None:
                     return (None, None, reason)
-
 
                 # Convert the value to a JSON string if it's not already a string
                 rule_value = rule.value if isinstance(
@@ -262,43 +264,6 @@ def insert_rule(rule, db_path="data/database.db"):
 
     except sqlite3.Error:
         return (None, None, "database_error")
-
-
-def get_rules():
-    """
-    Retrieves all rules stored in the database and converts them into
-    Rule instances.
-
-    Executes a query to fetch all records from the rules table and
-    reconstructs each rule, deserializing JSON values into Python lists
-    or dictionaries when applicable.
-
-    Returns:
-        list: A list of Rule objects containing the stored attributes,
-        including rule ID, type, value, category, priority, parent ID,
-        and default rule status.
-    """
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute('SELECT * FROM rules')
-        rows = cursor.fetchall()
-
-        rules_list = []
-        for row in rows:
-            rule = Rule(
-                rule_id=row[0],
-                rule_type=row[1],
-                # Convert JSON string back to list/dict if applicable
-                value=json.loads(row[2])
-                if row[2].startswith('[') or row[2].startswith('{') else row[2],
-                category=row[3],
-                priority=row[4],
-                parent_id=row[5],
-                is_default=row[6]
-            )
-            rules_list.append(rule)
-    return rules_list
 
 
 def update_rule(rule, db_path="data/database.db"):
@@ -348,19 +313,23 @@ def update_rule(rule, db_path="data/database.db"):
             if result[0] == 1:
                 return (False, None, "invalid_rule")
 
-            cursor.execute('SELECT id FROM rules')
-            database_rule_ids = cursor.fetchall()
+            cursor.execute('SELECT id, parent_id FROM rules')
+            database_rules = cursor.fetchall()
+
+            parent_relations = dict(database_rules)
 
             existing_rule_ids = []
-            for row in database_rule_ids:
+            for row in database_rules:
                 existing_rule_ids.append(row[0])
 
-            rule_validator = RuleValidator(rule, existing_rule_ids)
+            rule_validator = RuleValidator(
+                rule, existing_rule_ids, parent_relations)
             validation_results = rule_validator.validate_rule()
             if not all(validation_results.values()):
                 return (False, None, "invalid_rule")
 
-            conflict_validator = RuleConflictValidator(rule, conn, rule.rule_id)
+            conflict_validator = RuleConflictValidator(
+                rule, conn, rule.rule_id)
             has_conflict, extensions, reason = conflict_validator.validate_conflicts()
 
             if has_conflict is True:
@@ -393,13 +362,49 @@ def update_rule(rule, db_path="data/database.db"):
         return (None, None, "database_error")
 
 
+def get_rules():
+    """
+    Retrieves all rules stored in the database and converts them into
+    Rule instances.
+
+    Executes a query to fetch all records from the rules table and
+    reconstructs each rule, deserializing JSON values into Python lists
+    or dictionaries when applicable.
+
+    Returns:
+        list: A list of Rule objects containing the stored attributes,
+        including rule ID, type, value, category, priority, parent ID,
+        and default rule status.
+    """
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT * FROM rules')
+        rows = cursor.fetchall()
+
+        rules_list = []
+        for row in rows:
+            rule = Rule(
+                rule_id=row[0],
+                rule_type=row[1],
+                # Convert JSON string back to list/dict if applicable
+                value=json.loads(row[2])
+                if row[2].startswith('[') or row[2].startswith('{') else row[2],
+                category=row[3],
+                priority=row[4],
+                parent_id=row[5],
+                is_default=row[6]
+            )
+            rules_list.append(rule)
+    return rules_list
+
+
 def delete_rule(rule_id, db_path="data/database.db"):
     """
     Deletes a custom rule from the database using its identifier.
 
-    Checks whether the specified rule exists and prevents the deletion
-    of default rules. Deletes the rule only if it exists and is not
-    marked as a default rule.
+    Checks whether the specified rule exists, prevents the deletion
+    of default rules, and prevents deleting rules that have child rules.
 
     Args:
         rule_id (int): The identifier of the rule to delete.
@@ -409,17 +414,18 @@ def delete_rule(rule_id, db_path="data/database.db"):
     Returns:
         tuple:
             - bool | None: True if the rule is deleted successfully,
-                False if the rule is invalid, or None if the deletion
-                fails or a database error occurs.
+                False if the rule is invalid or has children, or None
+                if the deletion fails or a database error occurs.
             - None: Placeholder for additional result data.
             - str: Result code: 'success', 'invalid_rule',
-                'delete_failed', or 'database_error'.
+                'has_children', 'delete_failed', or 'database_error'.
     """
 
     try:
         with get_connection(db_path) as conn:
             cursor = conn.cursor()
 
+            # Check whether the rule exists and is not a default rule.
             cursor.execute(
                 'SELECT is_default FROM rules WHERE id = ?',
                 (rule_id,)
@@ -428,9 +434,20 @@ def delete_rule(rule_id, db_path="data/database.db"):
 
             if result is None:
                 return (False, None, "invalid_rule")
+
             if result[0] == 1:
                 return (False, None, "invalid_rule")
 
+            # Check whether the rule has child rules.
+            cursor.execute(
+                'SELECT 1 FROM rules WHERE parent_id = ? LIMIT 1',
+                (rule_id,)
+            )
+
+            if cursor.fetchone() is not None:
+                return (False, None, "has_children")
+
+            # Delete the rule if no child rules exist.
             cursor.execute(
                 'DELETE FROM rules WHERE id = ? AND is_default = 0',
                 (rule_id,)
@@ -438,8 +455,8 @@ def delete_rule(rule_id, db_path="data/database.db"):
 
             if cursor.rowcount == 1:
                 return (True, None, "success")
-            else:
-                return (None, None, "delete_failed")
+
+            return (None, None, "delete_failed")
 
     except sqlite3.Error:
         return (None, None, "database_error")
